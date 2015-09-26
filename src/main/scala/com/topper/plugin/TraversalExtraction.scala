@@ -1,6 +1,6 @@
-package extractor.plugin
+package com.topper.plugin
 
-import Logging.Utility._
+import com.topper.logging.Logging._
 import scala.tools.nsc.Global
 
 /*

@@ -1,10 +1,10 @@
-organization  := "canve"
+organization := "canve"
 
 name := "compiler-plugin"
 
 version := "0.0.1"
 
-scalaVersion  := "2.11.7"
+scalaVersion := "2.11.7"
 
 crossScalaVersions := Seq("2.10.4", "2.11.7")
 
@@ -21,12 +21,12 @@ unmanagedSourceDirectories in Test <+= baseDirectory(_ / "src" / "test" / "resou
 // Sonatype
 publishArtifact in Test := false
 
-publishTo <<= version { (v: String) =>
-  Some("releases"  at "https://oss.sonatype.org/service/local/staging/deploy/maven2")
+publishTo <<= version {(v: String) =>
+  Some("releases" at "https://oss.sonatype.org/service/local/staging/deploy/maven2")
 }
 
-pomExtra := (
-  <url>https://github.com/matanster/extractor</url>
+pomExtra :=
+  <url>https://github.com/gtopper/extractor</url>
     <licenses>
       <license>
         <name>MIT license</name>
@@ -35,9 +35,8 @@ pomExtra := (
     </licenses>
     <developers>
       <developer>
-        <id>matanster</id>
-        <name>matanster</name>
-        <url>https://github.com/matanster</url>
+        <id>gtopper</id>
+        <name>gtopper</name>
+        <url>https://github.com/gtopper</url>
       </developer>
     </developers>
-  )

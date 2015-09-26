@@ -1,4 +1,4 @@
-package Logging
+package com.topper.logging
 
 import scala.tools.nsc.io._
 

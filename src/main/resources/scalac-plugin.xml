@@ -1,4 +1,4 @@
 <plugin>
     <name>extractor</name>
-    <classname>extractor.plugin.RuntimePlugin</classname>
+    <classname>com.topper.plugin.RuntimePlugin</classname>
 </plugin>

@@ -1,7 +1,7 @@
-package extractor.plugin
+package com.topper.plugin
 
 import tools.nsc.Global
-import Logging.Utility._
+import com.topper.logging.Logging._
 
 // TODO: capture leading comment lines, as a separate `comments` property.
 //       surely the user will appreciate them, if they can be optionally showed to them.

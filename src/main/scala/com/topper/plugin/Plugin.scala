@@ -1,4 +1,4 @@
-package extractor.plugin
+package com.topper.plugin
 
 import tools.nsc.Global
 import scala.collection.SortedSet

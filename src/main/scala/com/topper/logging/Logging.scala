@@ -1,7 +1,7 @@
-package Logging
+package com.topper.logging
 import tools.nsc.Global
 
-object Utility {
+object Logging {
   
   def logEdge(nodeA: Int, relation: String, nodeB: Int) = {    
     println(nodeA + " " + relation + " " + nodeB)
