@@ -22,10 +22,7 @@ object Output {
     writeOutputFile(projectName, "nodes",
       "definition,notSynthetic,id,name,kind\n" +
         nodesByID.map {node =>
-          List(node._2.source match {
-            case Some(_) => "project"
-            case None => "external"
-          },
+          List(
             node._2.notSynthetic,
             node._2.id,
             node._2.name,
@@ -73,10 +70,5 @@ object Output {
           List(edge.id1, edge.edgeKind, edge.id2).mkString(",") +
             s" // ${node1.owner}.${node1.name} -> ${node2.owner}.${node2.name}"
         }.mkString("\n"))
-
-//    nodesByID.values.foreach(node =>
-//      if (node.source.isDefined)
-//        writeOutputFile(projectName, "node-source-" + node.id,
-//          "< in file " + node.fileName.get + " >\n\n" + node.source.get.mkString + "\n"))
   }
 }

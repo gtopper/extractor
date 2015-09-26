@@ -36,12 +36,7 @@ object TraversalExtraction {
 
     def addNode(global: Global)(s: global.Symbol): Node = {
 
-      val (source, filename) = s.sourceFile match {
-        case null => // no source file included in this project for this entity
-          None -> None
-        case _ =>
-          SourceExtract(global)(s) -> Some(s.sourceFile.toString)
-      }
+      val filename = Option(s.sourceFile).map(_.toString)
 
       val newNode = Node(
         s.id,
@@ -49,7 +44,6 @@ object TraversalExtraction {
         s.owner.nameString,
         s.kindString,
         !s.isSynthetic,
-        source,
         filename
       )
 
@@ -64,10 +58,10 @@ object TraversalExtraction {
       edges = edges :+ Edge(id1, edgeKind, id2)
 
     /*
-     * Captures the node's hierarchy chain -  
-     * this is needed for the case that the node is a library symbol, 
+     * Captures the node's hierarchy chain -
+     * this is needed for the case that the node is a library symbol,
      * so we won't (necessarily) bump into its parents while compiling
-     * the project being compiled.  
+     * the project being compiled.
      */
     def recordOwnerChain(node: Node, symbol: Symbol): Unit = {
       // Note: there is also the reflection library supplied Node.ownerChain method,
@@ -86,7 +80,7 @@ object TraversalExtraction {
     class ExtractionTraversal(defParent: Option[global.Symbol]) extends Traverser {
       override def traverse(tree: Tree): Unit = {
 
-        // see http://www.scala-lang.org/api/2.11.0/scala-reflect/index.html#scala.reflect.api.Trees 
+        // see http://www.scala-lang.org/api/2.11.0/scala-reflect/index.html#scala.reflect.api.Trees
         // for the different cases, as well as the source of the types matched against
         tree match {
 

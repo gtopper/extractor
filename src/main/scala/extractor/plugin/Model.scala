@@ -11,7 +11,6 @@ case class Node(id: Int,
                 owner: String,
                 kind: String,
                 notSynthetic: Boolean,
-                source: Option[String],
                 fileName: Option[String]) {
   var ownersTraversed = false
 }
