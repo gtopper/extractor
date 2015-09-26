@@ -1,6 +1,7 @@
-package extractor.plugin
-import scala.tools.nsc.Global
+package Extractor.Plugin
+
 import Logging.Utility._
+import scala.tools.nsc.Global
 
 /*
  * TODO: turn this comment into an actionable such as logging the flags for forensics,
@@ -12,23 +13,55 @@ import Logging.Utility._
  * some settings may skew the results of this code.
  */
 
-object TraversalExtractionWriter {
-  def apply(global: Global)(unit: global.CompilationUnit)(projectName: String) = {
-    val graph: Graph = TraversalExtraction(global)(unit.body)
+object TraversalExtractionWrapper {
+  def apply(global: Global)(unit: global.CompilationUnit)(projectName: String): Graph = {
+    val graph = TraversalExtraction(global)(unit.body)
 
-    Log(graph.nodes.size + " entities so far in project " + projectName)
-    Log(graph.edges.size + " edges so far for project " + projectName)
-    Output.write
-    Log("done examining source file" + unit.source.path + "...")
+    Log(s"${graph.nodes.size} entities (before deduplication), ${graph.edges.size} edges")
+    Log(s"Done examining source file ${unit.source.path} containing " +
+      s"${graph.nodes.size} entities (before deduplication), ${graph.edges.size} edges")
 
-    Unit // Should return Unit    
+    graph
   }
 }
 
 object TraversalExtraction {
 
-  def apply(global: Global)(body: global.Tree) : Graph = {
-    import global._ // for having access to typed symbol methods
+  def apply(global: Global)(body: global.Tree): Graph = {
+
+    // for having access to typed symbol methods
+    import global._
+
+    var nodes: Vector[Node] = Vector.empty
+
+    def addNode(global: Global)(s: global.Symbol): Node = {
+
+      val (source, filename) = s.sourceFile match {
+        case null => // no source file included in this project for this entity
+          None -> None
+        case _ =>
+          SourceExtract(global)(s) -> Some(s.sourceFile.toString)
+      }
+
+      val newNode = Node(
+        s.id,
+        s.nameString,
+        s.owner.nameString,
+        s.kindString,
+        !s.isSynthetic,
+        source,
+        filename
+      )
+
+      nodes = nodes :+ newNode
+
+      newNode
+    }
+
+    var edges: Vector[Edge] = Vector.empty
+
+    def addEdge(id1: Int, edgeKind: String, id2: Int): Unit =
+      edges = edges :+ Edge(id1, edgeKind, id2)
 
     /*
      * Captures the node's hierarchy chain -  
@@ -42,24 +75,10 @@ object TraversalExtraction {
       if (!node.ownersTraversed) {
         if (symbol.nameString != "<root>") {
           val ownerSymbol = symbol.owner
-          val ownerNode = Nodes(global)(ownerSymbol)
-          Edges(symbol.owner.id, "declares member", symbol.id)
+          val ownerNode = addNode(global)(ownerSymbol)
+          addEdge(symbol.owner.id, "is member of", symbol.id)
           recordOwnerChain(ownerNode, ownerSymbol)
           node.ownersTraversed = true
-        }
-      }
-    }
-
-    // Exploration function to trace a tree
-    class TraceTree extends Traverser {
-      override def traverse(tree: Tree): Unit = {
-        tree match {
-          case _ =>
-            Log(Console.GREEN + Console.BOLD + tree.getClass.getSimpleName + " " + Option(tree.symbol).fold("")(_.kindString) + " " + tree.id)
-            if (tree.isType) Log("type " + tree.symbol + " (" + tree.symbol.id + ")")
-            if (tree.isTerm) Log("term " + tree.symbol + " " + Option(tree.symbol).fold("")(_.id.toString))
-            Log(Console.RESET)
-            super.traverse(tree)
         }
       }
     }
@@ -73,42 +92,19 @@ object TraversalExtraction {
 
           // capture member usage
           case select: Select =>
+
+            if (defParent.isDefined) addEdge(defParent.get.id, "uses", tree.symbol.id)
+
+            val node = addNode(global)(select.symbol)
+
             select.symbol.kindString match {
               case "method" | "constructor" =>
                 if (defParent.isEmpty) Warning.logMemberParentLacking(global)(select.symbol)
 
-                if (defParent.isDefined) Edges(defParent.get.id, "uses", select.symbol.id)
-               
-                val node = Nodes(global)(select.symbol)
-
-                // record the source code location where the symbol is being used by the user 
-                // this is a proof of concept, that only doesn't propagate its information
-                // to the UI in any way yet.
-                if (defParent.isDefined) {
-                  val callingSymbol = defParent.get
-                  callingSymbol.sourceFile match {
-                    case null => 
-                    case _ =>
-                      // the source code location of the call made by the caller
-                      val source = callingSymbol.sourceFile.toString
-                      val line = select.pos.line
-                      val column = select.pos.column
-                      //Log("symbol " + select.symbol.nameString + "is being used in " + source + " " + line + "," + column)
-                  }
-                }
-
-                recordOwnerChain(node, select.symbol)
-
               case _ =>
-
-                //Log("Processing select of kind " + select.symbol.kindString + " symbol: " + showRaw(select))
-
-                if (defParent.isDefined) Edges(defParent.get.id, "uses", select.symbol.id)
-
-                val node = Nodes(global)(select.symbol)
-
-                recordOwnerChain(node, select.symbol)
             }
+
+            recordOwnerChain(node, select.symbol)
 
           /*
            *    See:
@@ -122,15 +118,15 @@ object TraversalExtraction {
 
             val symbol = tree.symbol
 
-            Nodes(global)(symbol)
-            Edges(defParent.get.id, "declares member", symbol.id)
+            addNode(global)(symbol)
+            addEdge(symbol.id, "is member of", defParent.get.id)
 
             // Capturing the defined val's type (not kind) while at it
             val valueType = symbol.tpe.typeSymbol // the type that this val instantiates.
-            val node = Nodes(global)(valueType)
+          val node = addNode(global)(valueType)
             recordOwnerChain(node, valueType)
 
-            Edges(symbol.id, "is of type", valueType.id)
+            addEdge(symbol.id, "is of type", valueType.id)
 
           // Capture defs of methods.
           // Note this will also capture default constructors synthesized by the compiler
@@ -138,8 +134,8 @@ object TraversalExtraction {
           case DefDef(mods, name, tparams, vparamss, tpt, rhs) =>
             val symbol = tree.symbol
 
-            Nodes(global)(symbol)
-            Edges(defParent.get.id, "declares member", symbol.id)
+            addNode(global)(symbol)
+            addEdge(symbol.id, "is member of", defParent.get.id)
 
             val traverser = new ExtractionTraversal(Some(tree.symbol))
             if (symbol.nameString == "get") {
@@ -155,12 +151,12 @@ object TraversalExtraction {
 
             val typeSymbol = tree.tpe.typeSymbol
 
-            val node = Nodes(global)(typeSymbol)
+            val node = addNode(global)(typeSymbol)
             recordOwnerChain(node, typeSymbol)
 
             val parentTypeSymbols = parents.map(parent => parent.tpe.typeSymbol).toSet
-            parentTypeSymbols.foreach { s =>
-              val parentNode = Nodes(global)(s)
+            parentTypeSymbols.foreach {s =>
+              val parentNode = addNode(global)(s)
               recordOwnerChain(parentNode, s)
             }
 
@@ -168,16 +164,15 @@ object TraversalExtraction {
             if (defParent.isDefined)
               if (defParent.get.id != typeSymbol.owner.id)
                 Warning.logParentNotOwner(global)(defParent.get, typeSymbol.owner)
-                
+
             parentTypeSymbols.foreach(s =>
-              Edges(typeSymbol.id, "extends", s.id))
+              addEdge(typeSymbol.id, "extends", s.id))
 
             val traverser = new ExtractionTraversal(Some(tree.tpe.typeSymbol))
-            body foreach { tree => traverser.traverse(tree) }
+            body foreach {tree => traverser.traverse(tree)}
 
-          case tree =>
-            super.traverse(tree)
-
+          case subtree =>
+            super.traverse(subtree)
         }
       }
     }
@@ -185,6 +180,6 @@ object TraversalExtraction {
     val traverser = new ExtractionTraversal(None)
     traverser.traverse(body)
 
-    Graph(Nodes.list.map(_._2).toList, Edges.list)  
+    Graph(nodes, edges)
   }
 }

@@ -1,4 +1,5 @@
-package extractor.plugin
+package Extractor.Plugin
+
 import Logging._
 
 /*
