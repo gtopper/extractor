@@ -43,7 +43,7 @@ object TraversalExtraction {
         s.nameString,
         s.owner.nameString,
         s.kindString,
-        !s.isSynthetic,
+        s.isSynthetic,
         filename
       )
 

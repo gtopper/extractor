@@ -23,7 +23,7 @@ object Output {
       "definition,notSynthetic,id,name,kind\n" +
         nodesByID.map {node =>
           List(
-            node._2.notSynthetic,
+            node._2.synthetic,
             node._2.id,
             node._2.name,
             node._2.owner,
@@ -47,7 +47,7 @@ object Output {
     val unusedNodes = nodesByID -- usedNodes
 
     val unsedNodesStr = unusedNodes
-      .map {case (id, node) => s"  $id // ${node.owner}.${node.name}"}
+      .collect {case (id, node) if !node.synthetic => s"  $id // ${node.owner}.${node.name}"}
       .mkString("\n")
 
     writeOutputFile(
