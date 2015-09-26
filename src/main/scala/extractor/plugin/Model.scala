@@ -2,37 +2,6 @@ package extractor.plugin
 
 import scala.tools.nsc.Global
 
-object Nodes {
-
-  var list: List[Node] = List.empty
-
-  def apply(global: Global)(s: global.Symbol): Node = {
-
-    val newNode = {
-      val (source, filename) = s.sourceFile match {
-        case null => // no source file included in this project for this entity
-          None -> None
-        case _ =>
-          SourceExtract(global)(s) -> Some(s.sourceFile.toString)
-      }
-
-      Node(s.id, s.nameString, s.owner.nameString, s.kindString, !s.isSynthetic, source, filename)
-    }
-
-    list = newNode :: list
-
-    newNode
-  }
-}
-
-object Edges {
-
-  var list: List[Edge] = List()
-
-  def apply(id1: Int, edgeKind: String, id2: Int): Unit =
-    list = Edge(id1, edgeKind, id2) :: list
-}
-
 case class Edge(id1: Int,
                 edgeKind: String,
                 id2: Int)
