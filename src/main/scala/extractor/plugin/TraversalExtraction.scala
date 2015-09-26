@@ -1,4 +1,4 @@
-package Extractor.Plugin
+package extractor.plugin
 
 import Logging.Utility._
 import scala.tools.nsc.Global

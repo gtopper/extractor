@@ -1,4 +1,4 @@
-package Extractor.Plugin
+package extractor.plugin
 
 import tools.nsc.Global
 import Logging.Utility._

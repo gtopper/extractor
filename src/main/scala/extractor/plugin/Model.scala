@@ -1,4 +1,4 @@
-package Extractor.Plugin
+package extractor.plugin
 
 import scala.tools.nsc.Global
 

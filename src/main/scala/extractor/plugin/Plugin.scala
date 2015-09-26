@@ -1,4 +1,4 @@
-package Extractor.Plugin
+package extractor.plugin
 
 import tools.nsc.Global
 import scala.collection.SortedSet

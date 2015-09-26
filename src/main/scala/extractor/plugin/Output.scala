@@ -1,4 +1,4 @@
-package Extractor.Plugin
+package extractor.plugin
 
 import Util.FileIO._
 

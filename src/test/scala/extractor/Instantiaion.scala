@@ -1,4 +1,5 @@
-import Extractor.Plugin.{Graph, TraversalExtraction}
+
+import extractor.plugin.{Graph, TraversalExtraction}
 import scala.tools.nsc.Global
 import utest._
 import utest.ExecutionContext.RunNow

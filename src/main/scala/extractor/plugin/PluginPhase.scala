@@ -1,4 +1,4 @@
-package Extractor.Plugin
+package extractor.plugin
 
 import scala.tools.nsc.plugins.PluginComponent
 import scala.tools.nsc.{Global, Phase}
@@ -28,9 +28,7 @@ class PluginPhase(val global: Global) extends PluginComponent {
 
       val graph = units.foldLeft(Graph(Vector.empty, Vector.empty)) {case (graphAcc, unit) =>
 
-        Thread.sleep(5000)
-
-        if (unit.source.path.endsWith(".scala")) {
+        if (unit.source.file.name.endsWith(".scala")) {
           Log("examining source file" + unit.source.path + "...")
           val graph = TraversalExtractionWrapper(t.global)(unit)(projectName)
           graphAcc + graph
