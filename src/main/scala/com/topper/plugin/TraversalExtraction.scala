@@ -70,7 +70,7 @@ object TraversalExtraction {
         if (symbol.nameString != "<root>") {
           val ownerSymbol = symbol.owner
           val ownerNode = addNode(global)(ownerSymbol)
-          addEdge(symbol.owner.id, "is member of", symbol.id)
+          addEdge(symbol.id, "is member of", symbol.owner.id)
           recordOwnerChain(ownerNode, ownerSymbol)
           node.ownersTraversed = true
         }
