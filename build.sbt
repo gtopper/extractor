@@ -6,17 +6,13 @@ version := "0.0.1"
 
 scalaVersion := "2.11.7"
 
-crossScalaVersions := Seq("2.10.4", "2.11.7")
+crossScalaVersions := Seq("2.10.5", "2.11.7")
 
 libraryDependencies ++= Seq(
   "org.scala-lang" % "scala-compiler" % scalaVersion.value % "provided",
   "canve" %% "compiler-plugin-unit-test-lib" % "1.0.0",
   "com.lihaoyi" %% "utest" % "0.3.1"
 )
-
-testFrameworks += new TestFramework("utest.runner.Framework")
-
-unmanagedSourceDirectories in Test <+= baseDirectory(_ / "src" / "test" / "resources")
 
 // Sonatype
 publishArtifact in Test := false
