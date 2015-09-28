@@ -68,10 +68,9 @@ object TraversalExtraction {
       //       for now, the recursive iteration used here instead seems as good.
       if (!node.ownersTraversed) {
         if (symbol.nameString != "<root>") {
-          val ownerSymbol = symbol.owner
-          val ownerNode = addNode(global)(ownerSymbol)
+          val ownerNode = addNode(global)(symbol.owner)
           addEdge(symbol.id, "is member of", symbol.owner.id)
-          recordOwnerChain(ownerNode, ownerSymbol)
+          recordOwnerChain(ownerNode, symbol.owner)
           node.ownersTraversed = true
         }
       }
@@ -86,6 +85,12 @@ object TraversalExtraction {
 
           // capture member usage
           case select: Select =>
+
+            if (select.qualifier.symbol != null) {
+              if (defParent.isDefined)
+                addEdge(defParent.get.id, "uses qualifier", select.qualifier.symbol.id)
+              addNode(global)(select.qualifier.symbol)
+            }
 
             if (defParent.isDefined) addEdge(defParent.get.id, "uses", tree.symbol.id)
 
@@ -117,7 +122,9 @@ object TraversalExtraction {
 
             // Capturing the defined val's type (not kind) while at it
             val valueType = symbol.tpe.typeSymbol // the type that this val instantiates.
-          val node = addNode(global)(valueType)
+
+            val node = addNode(global)(valueType)
+
             recordOwnerChain(node, valueType)
 
             addEdge(symbol.id, "is of type", valueType.id)
